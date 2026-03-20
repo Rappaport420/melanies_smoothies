@@ -2,6 +2,7 @@
 import streamlit as st
 from snowflake.snowpark.functions import col
 import requests  
+import pandas as pd
 #from snowflake.snowpark.context import get_active_session
 
 # Write directly to the app
@@ -9,7 +10,10 @@ st.title("Custome Smothies or whatever...")
 
 cnx = st. connection("snowflake")
 session = cnx. session()
+
 my_dataframe = session.table("smoothies.public.fruit_options").select(col('FRUIT_NAME'), col('SEARCH_ON'))
+pd_df = my_dataframe.to_pandas()
+
 #st.dataframe(data=my_dataframe, use_container_width=True)
 
 smoothie_name = st.text_input("Name on Smoothie")
@@ -29,6 +33,10 @@ if ingedient_list:
 
     for chosen_fruit in ingedient_list:
         string_fruits += chosen_fruit + ' '
+
+        search_on=pd_df.loc[pd_df['FRUIT_NAME'] == chosen_fruit, 'SEARCH_ON'].iloc[0]
+        st.write('The search value for ', chosen_fruit,' is ', search_on, '.')
+        
         smoothiefroot_response = requests.get(f"https://my.smoothiefroot.com/api/fruit/{chosen_fruit}")  
         sf_df = st.dataframe(data=smoothiefroot_response.json(), use_container_width=True)
     #st.write(string_fruits)
